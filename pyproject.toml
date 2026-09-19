@@ -13,7 +13,13 @@ dependencies = [
     "google-auth>=2.58.0",
     "google-auth-httplib2>=0.4.2",
     "google-auth-oauthlib>=1.4.1",
+    "tqdm>=4.67.0",
 ]
+
+[project.scripts]
+save_to_csv = "gmail_cleaner.cli:save_to_csv"
+analyze_inventory = "gmail_cleaner.cli:analyze_inventory_cli"
+clean_inventory = "gmail_cleaner.cli:clean_inventory_cli"
 
 [tool.setuptools.packages.find]
 where = ["src"]
