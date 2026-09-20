@@ -93,7 +93,7 @@ El proyecto se ha desarrollado y probado con Python 3.14.
 Clona el repositorio:
 
 ```bash
-git clone <REPOSITORY_URL>
+git clone https://github.com/valentinmiranda/gmail-cleaner.git
 cd gmail-cleaner
 ```
 
