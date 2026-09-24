@@ -66,7 +66,7 @@ def move_to_trash(path):
         if message.get("id")
     ]
 
-    print("\n=== BORRADO ===")
+    print("\n=== PAPELERA ===")
     print(f"Archivo: {path}")
     print(f"Mensajes seleccionados: {len(message_ids)}")
 

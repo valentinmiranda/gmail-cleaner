@@ -219,6 +219,67 @@ Este permiso permite leer y modificar mensajes de Gmail, incluyendo moverlos a l
 
 Las credenciales y tokens son datos privados y están excluidos de Git.
 
+## Caducidad y reautorización
+
+Gmail Cleaner utiliza OAuth 2.0 y guarda localmente un `refresh token` para poder renovar la autorización sin pedir al usuario que inicie sesión en cada ejecución.
+
+Sin embargo, los `refresh tokens` pueden dejar de ser válidos. Esto puede ocurrir, entre otras situaciones, cuando:
+
+* el proyecto OAuth de Google está configurado en **Testing**;
+* Google revoca el token;
+* el usuario revoca el acceso de Gmail a la aplicación;
+* se produce alguna otra invalidación de la autorización.
+
+### Proyectos OAuth en modo Testing
+
+Cuando el consentimiento OAuth de Google está configurado en **Testing**, los refresh tokens de los usuarios de prueba tienen una duración limitada. Google establece actualmente un límite de **7 días** para estos tokens.
+
+Por tanto, durante el desarrollo es normal que Gmail Cleaner necesite volver a solicitar autorización periódicamente.
+
+Esto **no significa que `credentials.json` haya caducado**. Las credenciales del cliente OAuth siguen siendo válidas; lo que ha dejado de ser válido es el token de autorización guardado en:
+
+```text
+credentials/token.json
+```
+
+### Reautorización automática
+
+Gmail Cleaner detecta cuando Google devuelve un error de autorización como:
+
+```text
+invalid_grant
+```
+
+Si el refresh token ya no es válido, el programa elimina el `token.json` local y vuelve a iniciar automáticamente el proceso OAuth.
+
+En ese caso:
+
+1. Se abrirá el navegador.
+2. Inicia sesión con la cuenta de Gmail que quieras utilizar.
+3. Concede de nuevo los permisos solicitados.
+4. Gmail Cleaner guardará un nuevo `credentials/token.json`.
+5. La operación continuará normalmente.
+
+No es necesario descargar un nuevo `credentials.json` para este caso.
+
+### Si la reautorización no se inicia automáticamente
+
+Puedes eliminar manualmente el token local:
+
+```bash
+rm credentials/token.json
+```
+
+y volver a ejecutar cualquier comando que necesite acceder a Gmail:
+
+```bash
+save_to_csv -c 1
+```
+
+Esto iniciará nuevamente el flujo OAuth.
+
+> **Importante:** `credentials.json` y `credentials/token.json` contienen información sensible. No los publiques, no los subas a GitHub y no los compartas.
+
 ---
 
 # Primer uso
@@ -748,24 +809,21 @@ token.json
 client_secret*.json
 data/*.csv
 ```
-
 Estos archivos están excluidos mediante `.gitignore`.
 
 Especialmente importante:
-
-```text
+```
 credentials.json
 ```
-
-contiene las credenciales del cliente OAuth.
+contiene las credenciales del cliente OAuth y es necesario para iniciar el flujo de autorización.
 
 Y:
-
-```text
+```
 credentials/token.json
 ```
+contiene los tokens de autorización de la cuenta de Gmail.
 
-contiene información de autorización de la cuenta.
+`token.json` puede regenerarse mediante el flujo OAuth si la autorización caduca o es revocada.
 
 No publiques ninguno de ellos.
 
@@ -833,7 +891,9 @@ gmail-cleaner/
 Gestiona:
 
 * credenciales OAuth;
-* renovación del token;
+* renovación del token cuando el refresh token sigue siendo válido;
+* detección de tokens caducados o revocados;
+* reautorización automática cuando es necesario;
 * creación del cliente Gmail API.
 
 ## `inventory.py`
